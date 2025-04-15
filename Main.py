@@ -24,6 +24,17 @@ dist_coeffs = np.zeros((5, 1))  # 왜곡 계수 (보정했다면 실제값 사�
 
 # --- 비디오 캡처 시작 ---
 cap = cv2.VideoCapture(0)
+ret, frame = cap.read()
+
+if not ret:
+    print("❌ 카메라를 열 수 없습니다.")
+    cap.release()
+    exit()
+
+# --- 영상 저장 세팅 ---
+h, w = frame.shape[:2]
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+out = cv2.VideoWriter('demo_ar_pose.mp4', fourcc, 20.0, (w, h))
 
 while True:
     ret, frame = cap.read()
@@ -52,9 +63,16 @@ while True:
         # 윗면 사각형
         frame = cv2.drawContours(frame, [imgpts[4:]], -1, (0, 0, 255), 2)
 
+    # 영상 저장
+    out.write(frame)
+
+    # 실시간 창 출력
     cv2.imshow('Pose Estimation AR Cube', frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
+# 종료 처리
 cap.release()
+out.release()
 cv2.destroyAllWindows()
+print("✅ 영상 저장 완료: demo_ar_pose.mp4")
