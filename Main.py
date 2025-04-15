@@ -36,6 +36,9 @@ h, w = frame.shape[:2]
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 out = cv2.VideoWriter('demo_ar_pose.mp4', fourcc, 20.0, (w, h))
 
+# --- 이미지 저장 플래그 ---
+saved = False
+
 while True:
     ret, frame = cap.read()
     if not ret:
@@ -66,6 +69,12 @@ while True:
             frame = cv2.line(frame, tuple(imgpts[i]), tuple(imgpts[j]), (255, 0, 0), 4)
         # 윗면 사각형
         frame = cv2.drawContours(frame, [imgpts[4:]], -1, (0, 0, 255), 4)
+
+        # ✅ 이미지 저장 (1회만)
+        if not saved:
+            cv2.imwrite("ar_pose_result.png", frame)
+            print("🖼️ 이미지 저장 완료: ar_pose_result.png")
+            saved = True
     else:
         print("❌ 체스보드 인식 실패")
 
