@@ -27,7 +27,7 @@ cap = cv2.VideoCapture(0)
 ret, frame = cap.read()
 
 if not ret:
-    print("❌ 카메라를 열 수 없습니다.")
+    print("❌ 카메라 열기 실패")
     cap.release()
     exit()
 
@@ -45,28 +45,34 @@ while True:
     ret_cb, corners = cv2.findChessboardCorners(gray, CHECKERBOARD, None)
 
     if ret_cb:
+        print("✅ 체스보드 인식 성공")
         corners2 = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1),
                                      criteria=(cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001))
+
+        # 코너 시각화
+        cv2.drawChessboardCorners(frame, CHECKERBOARD, corners2, ret_cb)
 
         # 카메라 자세 추정
         ret_pnp, rvecs, tvecs = cv2.solvePnP(objp, corners2, camera_matrix, dist_coeffs)
 
         # 큐브 투영
         imgpts, _ = cv2.projectPoints(cube, rvecs, tvecs, camera_matrix, dist_coeffs)
-
         imgpts = np.int32(imgpts).reshape(-1, 2)
+
         # 바닥 사각형
-        frame = cv2.drawContours(frame, [imgpts[:4]], -1, (0, 255, 0), -3)
+        frame = cv2.drawContours(frame, [imgpts[:4]], -1, (0, 255, 0), 4)
         # 옆면 연결선
         for i, j in zip(range(4), range(4, 8)):
-            frame = cv2.line(frame, tuple(imgpts[i]), tuple(imgpts[j]), (255, 0, 0), 2)
+            frame = cv2.line(frame, tuple(imgpts[i]), tuple(imgpts[j]), (255, 0, 0), 4)
         # 윗면 사각형
-        frame = cv2.drawContours(frame, [imgpts[4:]], -1, (0, 0, 255), 2)
+        frame = cv2.drawContours(frame, [imgpts[4:]], -1, (0, 0, 255), 4)
+    else:
+        print("❌ 체스보드 인식 실패")
 
     # 영상 저장
     out.write(frame)
 
-    # 실시간 창 출력
+    # 실시간 출력
     cv2.imshow('Pose Estimation AR Cube', frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
